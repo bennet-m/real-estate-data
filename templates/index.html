@@ -151,19 +151,53 @@
                     </div>
                     <div class="card-body">
                         <form id="scrapeForm">
-                            <div class="mb-4">
-                                <label for="urlInput" class="form-label">
-                                    <i class="fas fa-link me-2"></i>Building URL
-                                </label>
-                                <input 
-                                    type="url" 
-                                    class="form-control" 
-                                    id="urlInput" 
-                                    placeholder="https://hpdonline.nyc.gov/hpdonline/building/314419/overview"
-                                    required
-                                >
+                            <div class="row mb-4">
+                                <div class="col-md-4">
+                                    <label for="boroughSelect" class="form-label">
+                                        <i class="fas fa-map-marker-alt me-2"></i>Borough
+                                    </label>
+                                    <select class="form-control" id="boroughSelect" required>
+                                        <option value="">Select Borough</option>
+                                        <option value="Manhattan">Manhattan</option>
+                                        <option value="Bronx">Bronx</option>
+                                        <option value="Brooklyn">Brooklyn</option>
+                                        <option value="Queens">Queens</option>
+                                        <option value="Staten Island">Staten Island</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="blockInput" class="form-label">
+                                        <i class="fas fa-hashtag me-2"></i>Block Number
+                                    </label>
+                                    <input 
+                                        type="number" 
+                                        class="form-control" 
+                                        id="blockInput" 
+                                        placeholder="Enter Block #"
+                                        min="0"
+                                        maxlength="5"
+                                        required
+                                    >
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="lotInput" class="form-label">
+                                        <i class="fas fa-hashtag me-2"></i>Lot Number
+                                    </label>
+                                    <input 
+                                        type="number" 
+                                        class="form-control" 
+                                        id="lotInput" 
+                                        placeholder="Enter Lot #"
+                                        min="0"
+                                        maxlength="4"
+                                        required
+                                    >
+                                </div>
+                            </div>
+                            <div class="mb-3">
                                 <div class="form-text">
-                                    Enter the building overview URL you want to scrape
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Enter the borough, block, and lot number to search for building data on HPD Online
                                 </div>
                             </div>
                             
@@ -223,8 +257,10 @@
             e.preventDefault();
             
             console.log('🚀 Form submitted');
-            const url = document.getElementById('urlInput').value;
-            console.log('📝 URL to scrape:', url);
+            const borough = document.getElementById('boroughSelect').value;
+            const block = document.getElementById('blockInput').value;
+            const lot = document.getElementById('lotInput').value;
+            console.log('📝 Borough:', borough, 'Block:', block, 'Lot:', lot);
             
             const loadingDiv = document.getElementById('loading');
             const resultsDiv = document.getElementById('resultsContainer');
@@ -245,7 +281,11 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ url: url })
+                    body: JSON.stringify({ 
+                        borough: borough,
+                        block: block,
+                        lot: lot
+                    })
                 });
                 
                 console.log('📨 Response received:', response.status);

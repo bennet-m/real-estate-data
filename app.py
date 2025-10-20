@@ -17,8 +17,8 @@ def get_element_text(element):
     text = element.text or element.get_attribute('textContent') or element.get_attribute('innerText')
     return text.strip() if text else ""
 
-def scrape_building_data(url):
-    """Scrape building data from the given URL"""
+def scrape_building_data(borough, block, lot):
+    """Scrape building data using borough, block, and lot"""
     # Configure Chrome options with proper window size
     chrome_options = Options()
     chrome_options.add_argument("--no-sandbox")
@@ -37,9 +37,49 @@ def scrape_building_data(url):
     driver.maximize_window()
     
     try:
+        # Navigate to HPD Online website
+        url = "https://hpdonline.nyc.gov/hpdonline/"
         driver.get(url)
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "div.p-card-content")))
+        
+        # Wait for page to load and click on Borough / Block / Lot tab
+        print("🔍 Navigating to Borough / Block / Lot tab...")
+        tab_element = wait.until(EC.element_to_be_clickable((By.XPATH, "//span[contains(text(), 'Borough / Block / Lot')]")))
+        tab_element.click()
         time.sleep(2)
+        
+        # Fill in the form
+        print("📝 Filling in borough, block, and lot information...")
+        
+        # Select borough from dropdown
+        borough_dropdown = wait.until(EC.element_to_be_clickable((By.ID, "dashboardBuildingBoroDesk")))
+        borough_dropdown.click()
+        time.sleep(1)
+        
+        # Click on the specific borough option
+        borough_option = wait.until(EC.element_to_be_clickable((By.XPATH, f"//li[@role='option' and @aria-label='{borough}']")))
+        borough_option.click()
+        time.sleep(1)
+        
+        # Enter block number
+        block_input = wait.until(EC.presence_of_element_located((By.XPATH, "//input[@aria-label='Enter Block #']")))
+        block_input.clear()
+        block_input.send_keys(str(block))
+        time.sleep(1)
+        
+        # Enter lot number
+        lot_input = wait.until(EC.presence_of_element_located((By.XPATH, "//input[@aria-label='Enter Lot #']")))
+        lot_input.clear()
+        lot_input.send_keys(str(lot))
+        time.sleep(1)
+        
+        # Click search button
+        print("🔍 Clicking search button...")
+        search_button = wait.until(EC.element_to_be_clickable((By.ID, "dashboardBuildingBBLSearchDesk")))
+        search_button.click()
+        
+        # Wait for results to load
+        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "div.p-card-content")))
+        time.sleep(3)
 
         # Scrape data
         print("🔍 Scraping violation data...")
@@ -126,17 +166,27 @@ def scrape_data():
     """API endpoint to scrape building data"""
     try:
         data = request.get_json()
-        url = data.get('url')
+        borough = data.get('borough')
+        block = data.get('block')
+        lot = data.get('lot')
         
-        if not url:
-            return jsonify({'error': 'URL is required'}), 400
+        if not borough or not block or not lot:
+            return jsonify({'error': 'Borough, block, and lot are required'}), 400
         
-        # Validate URL format
-        if not url.startswith('http://') and not url.startswith('https://'):
-            url = 'https://' + url
+        # Validate inputs
+        try:
+            block = int(block)
+            lot = int(lot)
+        except ValueError:
+            return jsonify({'error': 'Block and lot must be valid numbers'}), 400
+        
+        # Validate borough
+        valid_boroughs = ['Manhattan', 'Bronx', 'Brooklyn', 'Queens', 'Staten Island']
+        if borough not in valid_boroughs:
+            return jsonify({'error': f'Invalid borough. Must be one of: {", ".join(valid_boroughs)}'}), 400
         
         # Scrape the data
-        building_data = scrape_building_data(url)
+        building_data = scrape_building_data(borough, block, lot)
         
         # Generate unique filename
         filename = f"building_data_{uuid.uuid4().hex[:8]}.csv"
@@ -171,4 +221,4 @@ def download_file(filename):
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=3000)
+    app.run(debug=True, host='0.0.0.0', port=4000)
