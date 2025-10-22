@@ -152,18 +152,32 @@
                     <div class="card-body">
                         <form id="scrapeForm">
                             <div class="mb-4">
-                                <label for="urlInput" class="form-label">
-                                    <i class="fas fa-link me-2"></i>Building URL
+                                <label for="hpdUrlInput" class="form-label">
+                                    <i class="fas fa-link me-2"></i>HPD Building URL
                                 </label>
                                 <input 
                                     type="url" 
                                     class="form-control" 
-                                    id="urlInput" 
+                                    id="hpdUrlInput" 
                                     placeholder="https://hpdonline.nyc.gov/hpdonline/building/314419/overview"
-                                    required
                                 >
                                 <div class="form-text">
-                                    Enter the building overview URL you want to scrape
+                                    Enter the HPD building overview URL you want to scrape
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="biswebUrlInput" class="form-label">
+                                    <i class="fas fa-link me-2"></i>BISWEB Building URL
+                                </label>
+                                <input 
+                                    type="url" 
+                                    class="form-control" 
+                                    id="biswebUrlInput" 
+                                    placeholder="http://a810-bisweb.nyc.gov/bisweb/PropertyBrowseByBBLServlet?allborough=1&allblock=431&alllot=1&go5=+GO+&requestid=0"
+                                >
+                                <div class="form-text">
+                                    Enter the BISWEB building URL you want to scrape
                                 </div>
                             </div>
                             
@@ -223,8 +237,16 @@
             e.preventDefault();
             
             console.log('🚀 Form submitted');
-            const url = document.getElementById('urlInput').value;
-            console.log('📝 URL to scrape:', url);
+            const hpdUrl = document.getElementById('hpdUrlInput').value;
+            const biswebUrl = document.getElementById('biswebUrlInput').value;
+            console.log('📝 HPD URL to scrape:', hpdUrl);
+            console.log('📝 BISWEB URL to scrape:', biswebUrl);
+            
+            // Check if at least one URL is provided
+            if (!hpdUrl && !biswebUrl) {
+                alert('Please provide at least one URL to scrape.');
+                return;
+            }
             
             const loadingDiv = document.getElementById('loading');
             const resultsDiv = document.getElementById('resultsContainer');
@@ -245,7 +267,10 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ url: url })
+                    body: JSON.stringify({ 
+                        hpd_url: hpdUrl,
+                        bisweb_url: biswebUrl
+                    })
                 });
                 
                 console.log('📨 Response received:', response.status);
