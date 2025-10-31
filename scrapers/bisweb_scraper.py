@@ -23,7 +23,7 @@ class BISWEBScraper:
         chrome_options = Options()
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-dev-shm-usage")
-        chrome_options.add_argument("--headless")
+        # chrome_options.add_argument("--headless")
         chrome_options.add_argument("--window-size=1920,1080")  # Set window size to ensure content loads
         chrome_options.add_argument("--start-maximized")  # Start maximized
         chrome_options.add_argument("--disable-web-security")  # Disable web security for better compatibility
@@ -113,6 +113,54 @@ class BISWEBScraper:
                 for label, value in data_points:
                     building_data[label] = value
                     print(f"  📊 {label}: {value}")
+            
+            # Extract Tax Class
+            try:
+                if "Tax Class" not in building_data:
+                    tax_class_element = driver.find_element(By.CSS_SELECTOR, "p.sc-hRJfrW.jVlUZz")
+                    building_data["Tax Class"] = self.get_element_text(tax_class_element)
+                    print(f"  📊 Tax Class: {building_data['Tax Class']}")
+            except Exception as e:
+                print(f"  ⚠️ Error extracting Tax Class: {str(e)}")
+            
+            # Extract Total Value and Taxable Billable AV from the table with thead.table-primary
+            try:
+                # Find the table with thead.table-primary
+                table = driver.find_element(By.CSS_SELECTOR, "thead.table-primary").find_element(By.XPATH, "./..")
+                
+                # Find the first data row (tbody tr or table tr after thead)
+                try:
+                    # Try to find tbody first
+                    tbody = table.find_element(By.CSS_SELECTOR, "tbody")
+                    first_row = tbody.find_element(By.CSS_SELECTOR, "tr")
+                except Exception:
+                    # If no tbody, find first tr after thead
+                    all_rows = table.find_elements(By.CSS_SELECTOR, "tr")
+                    # Skip the header row (thead tr)
+                    if len(all_rows) > 1:
+                        first_row = all_rows[1]
+                    else:
+                        raise Exception("No data rows found in table")
+                
+                # Get all cells from the first row
+                cells = first_row.find_elements(By.CSS_SELECTOR, "td, th")
+                
+                # Based on the thead structure: FY, Building Class, Tax Class, Land Value, Improvement Value, Total Value, Change, Taxable Billable AV, Change
+                # We want Total Value (index 5) and Taxable Billable AV (index 7)
+                if len(cells) >= 8:
+                    total_value = self.get_element_text(cells[5])
+                    taxable_value = self.get_element_text(cells[7])
+                    
+                    building_data["Total Value"] = total_value
+                    building_data["Taxable Billable AV"] = taxable_value
+                    
+                    print(f"  📊 Total Value: {total_value}")
+                    print(f"  📊 Taxable Billable AV: {taxable_value}")
+                else:
+                    print(f"  ⚠️ Table row doesn't have enough columns (found {len(cells)}, expected at least 8)")
+                    
+            except Exception as e:
+                print(f"  ⚠️ Error extracting table data (Total Value, Taxable Billable AV): {str(e)}")
             
         except Exception as e:
             print(f"  ❌ Error scraping building info: {str(e)}")
