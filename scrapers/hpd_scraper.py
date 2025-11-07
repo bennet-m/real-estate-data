@@ -23,7 +23,7 @@ class HPDScraper:
         chrome_options = Options()
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-dev-shm-usage")
-        chrome_options.add_argument("--headless")
+        # chrome_options.add_argument("--headless")
         chrome_options.add_argument("--window-size=1920,1080")  # Set window size to ensure content loads
         chrome_options.add_argument("--start-maximized")  # Start maximized
         chrome_options.add_argument("--disable-web-security")  # Disable web security for better compatibility
@@ -48,11 +48,11 @@ class HPDScraper:
             try:
                 element = driver.find_element(By.XPATH, f"//span[contains(normalize-space(.),'{vtype} Class')]/span[@class='fw-bold']")
                 text = self.get_element_text(element)
-                print(f"  {vtype} Class violations: '{text}'")
-                violations[vtype] = int(text) if text else 0
+                if text:
+                    print(f"  {vtype} Class violations: '{text}'")
+                    violations[vtype] = int(text)
             except Exception as e:
                 print(f"  ❌ Error scraping {vtype} violations: {str(e)}")
-                violations[vtype] = 0
         
         return violations
     
