@@ -4,12 +4,14 @@ import os
 import uuid
 from scrapers.hpd_scraper import HPDScraper
 from scrapers.bisweb_scraper import BISWEBScraper
+from scrapers.dobnow_scraper import DOBNOWScraper
 
 app = Flask(__name__)
 
 # Initialize the scrapers
 hpd_scraper = HPDScraper()
 bisweb_scraper = BISWEBScraper()
+dobnow_scraper = DOBNOWScraper()
 
 @app.route('/')
 def index():
@@ -23,8 +25,9 @@ def scrape_data():
         data = request.get_json()
         hpd_url = data.get('hpd_url')
         bisweb_url = data.get('bisweb_url')
+        dobnow_url = data.get('dobnow_url')
         
-        if not hpd_url and not bisweb_url:
+        if not hpd_url and not bisweb_url and not dobnow_url:
             return jsonify({'error': 'At least one URL is required'}), 400
         
         all_data = {}
@@ -52,6 +55,18 @@ def scrape_data():
             # Prefix BISWEB data keys to distinguish them
             for key, value in bisweb_data.items():
                 all_data[f"BISWEB_{key}"] = value
+        
+        # Scrape DOBNOW data if URL provided
+        if dobnow_url:
+            # Validate URL format
+            if not dobnow_url.startswith('http://') and not dobnow_url.startswith('https://'):
+                dobnow_url = 'https://' + dobnow_url
+            
+            print(f"🔍 Scraping DOBNOW data from: {dobnow_url}")
+            dobnow_data = dobnow_scraper.scrape_building_data(dobnow_url)
+            # Prefix DOBNOW data keys to distinguish them
+            for key, value in dobnow_data.items():
+                all_data[f"DOBNOW_{key}"] = value
         
         # Generate unique filename
         filename = f"building_data_{uuid.uuid4().hex[:8]}.csv"
