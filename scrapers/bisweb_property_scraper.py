@@ -6,7 +6,7 @@ from .base_scraper import BaseScraper
 
 
 class BISWEBPropertyScraper(BaseScraper):
-    """Scraper for BISWEB Property Profile Overview page to extract landmark status and additional BINs"""
+    """Scraper for BISWEB Property Profile Overview page to extract landmark status, additional BINs, and violations"""
     
     def _scrape_data(self, driver, wait):
         """Scrape building data from BISWEB Property Profile Overview page"""
@@ -71,6 +71,60 @@ class BISWEBPropertyScraper(BaseScraper):
                     print(f"  📊 Additional BINs: NONE")
         except Exception as e:
             print(f"  ⚠️ Error extracting Additional BINs: {str(e)}")
+        
+        # Scrape DOB Violations
+        try:
+            print("  ⏳ Looking for DOB Violations row...")
+            # Find the row containing "Violations-DOB" link
+            dob_violations_row = wait.until(
+                EC.presence_of_element_located(
+                    (By.XPATH, "//tr[td[@class='content']//a[contains(@href, 'ActionsByLocationServlet') and contains(., 'Violations-DOB')]]")
+                )
+            )
+            
+            # Get all cells in this row
+            cells = dob_violations_row.find_elements(By.CSS_SELECTOR, "td.content")
+            
+            # Second cell (index 1) is total, third cell (index 2) is open
+            if len(cells) >= 3:
+                total_dob = self.get_element_text(cells[1])
+                open_dob = self.get_element_text(cells[2])
+                
+                if total_dob:
+                    building_data["DOB Violations Total"] = total_dob
+                    print(f"  📊 DOB Violations Total: {total_dob}")
+                if open_dob:
+                    building_data["DOB Violations Open"] = open_dob
+                    print(f"  📊 DOB Violations Open: {open_dob}")
+        except Exception as e:
+            print(f"  ⚠️ Error extracting DOB Violations: {str(e)}")
+        
+        # Scrape ECB Violations
+        try:
+            print("  ⏳ Looking for ECB Violations row...")
+            # Find the row containing "Violations-OATH/ECB" link
+            ecb_violations_row = wait.until(
+                EC.presence_of_element_located(
+                    (By.XPATH, "//tr[td[@class='content']//a[contains(@href, 'ECBQueryByLocationServlet') and contains(., 'Violations-OATH/ECB')]]")
+                )
+            )
+            
+            # Get all cells in this row
+            cells = ecb_violations_row.find_elements(By.CSS_SELECTOR, "td.content")
+            
+            # Second cell (index 1) is total, third cell (index 2) is open
+            if len(cells) >= 3:
+                total_ecb = self.get_element_text(cells[1])
+                open_ecb = self.get_element_text(cells[2])
+                
+                if total_ecb:
+                    building_data["ECB Violations Total"] = total_ecb
+                    print(f"  📊 ECB Violations Total: {total_ecb}")
+                if open_ecb:
+                    building_data["ECB Violations Open"] = open_ecb
+                    print(f"  📊 ECB Violations Open: {open_ecb}")
+        except Exception as e:
+            print(f"  ⚠️ Error extracting ECB Violations: {str(e)}")
         
         return building_data
 
