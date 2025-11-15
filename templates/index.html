@@ -196,6 +196,21 @@
                                 </div>
                             </div>
                             
+                            <div class="mb-4">
+                                <label for="biswebPropertyUrlInput" class="form-label">
+                                    <i class="fas fa-link me-2"></i>BISWEB Property Profile URL
+                                </label>
+                                <input 
+                                    type="url" 
+                                    class="form-control" 
+                                    id="biswebPropertyUrlInput" 
+                                    placeholder="https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?boro=1&block=00023&lot=7501&go3=+GO+&requestid=0"
+                                >
+                                <div class="form-text">
+                                    Enter the BISWEB Property Profile Overview URL you want to scrape
+                                </div>
+                            </div>
+                            
                             <div class="d-grid">
                                 <button type="submit" class="btn btn-primary" id="scrapeBtn">
                                     <i class="fas fa-search me-2"></i>Scrape Building Data
@@ -255,12 +270,14 @@
             const hpdUrl = document.getElementById('hpdUrlInput').value;
             const biswebUrl = document.getElementById('biswebUrlInput').value;
             const dobnowUrl = document.getElementById('dobnowUrlInput').value;
+            const biswebPropertyUrl = document.getElementById('biswebPropertyUrlInput').value;
             console.log('📝 HPD URL to scrape:', hpdUrl);
             console.log('📝 BISWEB URL to scrape:', biswebUrl);
             console.log('📝 DOBNOW URL to scrape:', dobnowUrl);
+            console.log('📝 BISWEB Property URL to scrape:', biswebPropertyUrl);
             
             // Check if at least one URL is provided
-            if (!hpdUrl && !biswebUrl && !dobnowUrl) {
+            if (!hpdUrl && !biswebUrl && !dobnowUrl && !biswebPropertyUrl) {
                 alert('Please provide at least one URL to scrape.');
                 return;
             }
@@ -287,7 +304,8 @@
                     body: JSON.stringify({ 
                         hpd_url: hpdUrl,
                         bisweb_url: biswebUrl,
-                        dobnow_url: dobnowUrl
+                        dobnow_url: dobnowUrl,
+                        bisweb_property_url: biswebPropertyUrl
                     })
                 });
                 

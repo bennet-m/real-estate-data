@@ -5,6 +5,7 @@ import uuid
 from scrapers.hpd_scraper import HPDScraper
 from scrapers.bisweb_scraper import BISWEBScraper
 from scrapers.dobnow_scraper import DOBNOWScraper
+from scrapers.bisweb_property_scraper import BISWEBPropertyScraper
 
 app = Flask(__name__)
 
@@ -12,6 +13,7 @@ app = Flask(__name__)
 hpd_scraper = HPDScraper()
 bisweb_scraper = BISWEBScraper()
 dobnow_scraper = DOBNOWScraper()
+bisweb_property_scraper = BISWEBPropertyScraper()
 
 @app.route('/')
 def index():
@@ -26,8 +28,9 @@ def scrape_data():
         hpd_url = data.get('hpd_url')
         bisweb_url = data.get('bisweb_url')
         dobnow_url = data.get('dobnow_url')
+        bisweb_property_url = data.get('bisweb_property_url')
         
-        if not hpd_url and not bisweb_url and not dobnow_url:
+        if not hpd_url and not bisweb_url and not dobnow_url and not bisweb_property_url:
             return jsonify({'error': 'At least one URL is required'}), 400
         
         all_data = {}
@@ -67,6 +70,18 @@ def scrape_data():
             # Prefix DOBNOW data keys to distinguish them
             for key, value in dobnow_data.items():
                 all_data[f"DOBNOW_{key}"] = value
+        
+        # Scrape BISWEB Property Profile data if URL provided
+        if bisweb_property_url:
+            # Validate URL format
+            if not bisweb_property_url.startswith('http://') and not bisweb_property_url.startswith('https://'):
+                bisweb_property_url = 'https://' + bisweb_property_url
+            
+            print(f"🔍 Scraping BISWEB Property Profile data from: {bisweb_property_url}")
+            bisweb_property_data = bisweb_property_scraper.scrape_building_data(bisweb_property_url)
+            # Prefix BISWEB Property data keys to distinguish them
+            for key, value in bisweb_property_data.items():
+                all_data[f"BISWEB_PROPERTY_{key}"] = value
         
         # Generate unique filename
         filename = f"building_data_{uuid.uuid4().hex[:8]}.csv"
