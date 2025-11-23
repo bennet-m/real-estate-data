@@ -1,5 +1,5 @@
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
 import time
 from .base_scraper import BaseScraper
@@ -7,6 +7,77 @@ from .base_scraper import BaseScraper
 
 class BISWEBScraper(BaseScraper):
     """Scraper for BISWEB website to extract building data"""
+    
+    def scrape_building_data(self, borough=None, block=None, lot=None, url=None):
+        """Main method to scrape building data using borough/block/lot or URL"""
+        driver, wait = self._setup_driver()
+        
+        try:
+            if borough and block and lot:
+                # Navigate to the portal and fill out the form
+                print("🌐 Navigating to Property Information Portal...")
+                driver.get("https://propertyinformationportal.nyc.gov/")
+                
+                # Wait for page to load
+                wait.until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+                time.sleep(2)
+                
+                print(f"📝 Filling out form with Borough={borough}, Block={block}, Lot={lot}")
+                
+                # Find and select the borough dropdown
+                borough_select = wait.until(
+                    EC.presence_of_element_located((By.CSS_SELECTOR, "select[aria-label='Select borough']"))
+                )
+                select = Select(borough_select)
+                select.select_by_value(str(borough))
+                print(f"  ✓ Selected borough: {borough}")
+                
+                # Find and fill the block input
+                # The form has form-floating divs where input comes before label
+                block_input = wait.until(
+                    EC.presence_of_element_located((By.XPATH, "//div[contains(@class, 'form-floating')]//label[contains(text(), 'Block')]/preceding-sibling::input | //div[contains(@class, 'form-floating')]//input[following-sibling::label[contains(text(), 'Block')]] | //label[@for='block']/../input | //input[@id='block']"))
+                )
+                block_input.clear()
+                block_input.send_keys(str(block))
+                print(f"  ✓ Entered block: {block}")
+                
+                # Find and fill the lot input
+                lot_input = wait.until(
+                    EC.presence_of_element_located((By.XPATH, "//div[contains(@class, 'form-floating')]//label[contains(text(), 'Lot')]/preceding-sibling::input | //div[contains(@class, 'form-floating')]//input[following-sibling::label[contains(text(), 'Lot')]] | //label[@for='lot']/../input | //input[@id='lot']"))
+                )
+                lot_input.clear()
+                lot_input.send_keys(str(lot))
+                print(f"  ✓ Entered lot: {lot}")
+                
+                # Find and click the submit button
+                submit_button = driver.find_element(By.XPATH, "//button[@type='submit' and contains(text(), 'Search')]")
+                submit_button.click()
+                print("  ✓ Submitted form")
+                
+                # Wait for navigation to the parcel page
+                time.sleep(3)
+                wait.until(lambda d: d.execute_script("return document.readyState") == "complete")
+                
+            elif url:
+                # Legacy support: if URL is provided, use it directly
+                print(f"🌐 Navigating to URL: {url}")
+                driver.get(url)
+            else:
+                raise ValueError("Either (borough, block, lot) or url must be provided")
+            
+            # Call the abstract method implemented by subclasses
+            building_data = self._scrape_data(driver, wait)
+            
+            # Return the scraped data
+            return building_data
+        except Exception as e:
+            import traceback
+            error_details = traceback.format_exc()
+            print(f"Full error traceback:\n{error_details}")
+            scraper_name = self.__class__.__name__
+            raise Exception(f"Error scraping {scraper_name} data: {str(e)}\nFull traceback: {error_details}")
+        finally:
+            driver.quit()
     
     def _scrape_building_info(self, driver):
         """Scrape building information from the BISWEB page"""

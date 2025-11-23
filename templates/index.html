@@ -167,17 +167,42 @@
                             </div>
                             
                             <div class="mb-4">
-                                <label for="biswebUrlInput" class="form-label">
-                                    <i class="fas fa-link me-2"></i>BISWEB Building URL
+                                <label class="form-label">
+                                    <i class="fas fa-building me-2"></i>BISWEB Building
                                 </label>
-                                <input 
-                                    type="url" 
-                                    class="form-control" 
-                                    id="biswebUrlInput" 
-                                    placeholder="https://propertyinformationportal.nyc.gov/parcels/parcel/1012880033"
-                                >
-                                <div class="form-text">
-                                    Enter the BISWEB building URL you want to scrape
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label for="biswebBorough" class="form-label">Borough</label>
+                                        <select class="form-select" id="biswebBorough">
+                                            <option value="">Select Borough</option>
+                                            <option value="1">Manhattan</option>
+                                            <option value="2">Bronx</option>
+                                            <option value="3">Brooklyn</option>
+                                            <option value="4">Queens</option>
+                                            <option value="5">Staten Island</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="biswebBlock" class="form-label">Block</label>
+                                        <input 
+                                            type="text" 
+                                            class="form-control" 
+                                            id="biswebBlock" 
+                                            placeholder="e.g., 00023"
+                                        >
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="biswebLot" class="form-label">Lot</label>
+                                        <input 
+                                            type="text" 
+                                            class="form-control" 
+                                            id="biswebLot" 
+                                            placeholder="e.g., 7501"
+                                        >
+                                    </div>
+                                </div>
+                                <div class="form-text mt-2">
+                                    Enter the Borough, Block, and Lot to scrape BISWEB Building data
                                 </div>
                             </div>
                             
@@ -268,17 +293,22 @@
             
             console.log('🚀 Form submitted');
             const hpdUrl = document.getElementById('hpdUrlInput').value;
-            const biswebUrl = document.getElementById('biswebUrlInput').value;
+            const biswebBorough = document.getElementById('biswebBorough').value;
+            const biswebBlock = document.getElementById('biswebBlock').value;
+            const biswebLot = document.getElementById('biswebLot').value;
             const dobnowUrl = document.getElementById('dobnowUrlInput').value;
             const biswebPropertyUrl = document.getElementById('biswebPropertyUrlInput').value;
             console.log('📝 HPD URL to scrape:', hpdUrl);
-            console.log('📝 BISWEB URL to scrape:', biswebUrl);
+            console.log('📝 BISWEB Borough:', biswebBorough);
+            console.log('📝 BISWEB Block:', biswebBlock);
+            console.log('📝 BISWEB Lot:', biswebLot);
             console.log('📝 DOBNOW URL to scrape:', dobnowUrl);
             console.log('📝 BISWEB Property URL to scrape:', biswebPropertyUrl);
             
-            // Check if at least one URL is provided
-            if (!hpdUrl && !biswebUrl && !dobnowUrl && !biswebPropertyUrl) {
-                alert('Please provide at least one URL to scrape.');
+            // Check if at least one URL or BISWEB Building (borough/block/lot) is provided
+            const hasBisweb = biswebBorough && biswebBlock && biswebLot;
+            if (!hpdUrl && !hasBisweb && !dobnowUrl && !biswebPropertyUrl) {
+                alert('Please provide at least one URL or BISWEB Building (Borough, Block, Lot) to scrape.');
                 return;
             }
             
@@ -303,7 +333,9 @@
                     },
                     body: JSON.stringify({ 
                         hpd_url: hpdUrl,
-                        bisweb_url: biswebUrl,
+                        bisweb_borough: biswebBorough,
+                        bisweb_block: biswebBlock,
+                        bisweb_lot: biswebLot,
                         dobnow_url: dobnowUrl,
                         bisweb_property_url: biswebPropertyUrl
                     })

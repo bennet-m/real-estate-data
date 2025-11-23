@@ -26,12 +26,16 @@ def scrape_data():
     try:
         data = request.get_json()
         hpd_url = data.get('hpd_url')
-        bisweb_url = data.get('bisweb_url')
+        bisweb_borough = data.get('bisweb_borough')
+        bisweb_block = data.get('bisweb_block')
+        bisweb_lot = data.get('bisweb_lot')
+        bisweb_url = data.get('bisweb_url')  # Legacy support
         dobnow_url = data.get('dobnow_url')
         bisweb_property_url = data.get('bisweb_property_url')
         
-        if not hpd_url and not bisweb_url and not dobnow_url and not bisweb_property_url:
-            return jsonify({'error': 'At least one URL is required'}), 400
+        has_bisweb = (bisweb_borough and bisweb_block and bisweb_lot) or bisweb_url
+        if not hpd_url and not has_bisweb and not dobnow_url and not bisweb_property_url:
+            return jsonify({'error': 'At least one URL or BISWEB Building (borough, block, lot) is required'}), 400
         
         all_data = {}
         
@@ -47,14 +51,25 @@ def scrape_data():
             for key, value in hpd_data.items():
                 all_data[f"HPD_{key}"] = value
         
-        # Scrape BISWEB data if URL provided
-        if bisweb_url:
+        # Scrape BISWEB data if borough/block/lot or URL provided
+        if bisweb_borough and bisweb_block and bisweb_lot:
+            print(f"🔍 Scraping BISWEB data with Borough={bisweb_borough}, Block={bisweb_block}, Lot={bisweb_lot}")
+            bisweb_data = bisweb_scraper.scrape_building_data(
+                borough=bisweb_borough,
+                block=bisweb_block,
+                lot=bisweb_lot
+            )
+            # Prefix BISWEB data keys to distinguish them
+            for key, value in bisweb_data.items():
+                all_data[f"BISWEB_{key}"] = value
+        elif bisweb_url:
+            # Legacy support: if URL is provided, use it directly
             # Validate URL format
             if not bisweb_url.startswith('http://') and not bisweb_url.startswith('https://'):
                 bisweb_url = 'https://' + bisweb_url
             
             print(f"🔍 Scraping BISWEB data from: {bisweb_url}")
-            bisweb_data = bisweb_scraper.scrape_building_data(bisweb_url)
+            bisweb_data = bisweb_scraper.scrape_building_data(url=bisweb_url)
             # Prefix BISWEB data keys to distinguish them
             for key, value in bisweb_data.items():
                 all_data[f"BISWEB_{key}"] = value
@@ -78,7 +93,7 @@ def scrape_data():
                 bisweb_property_url = 'https://' + bisweb_property_url
             
             print(f"🔍 Scraping BISWEB Property Profile data from: {bisweb_property_url}")
-            bisweb_property_data = bisweb_property_scraper.scrape_building_data(bisweb_property_url)
+            bisweb_property_data = bisweb_property_scraper.scrape_building_data(url=bisweb_property_url)
             # Prefix BISWEB Property data keys to distinguish them
             for key, value in bisweb_property_data.items():
                 all_data[f"BISWEB_PROPERTY_{key}"] = value
