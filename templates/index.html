@@ -152,17 +152,17 @@
                     <div class="card-body">
                         <form id="scrapeForm">
                             <div class="mb-4">
-                                <label for="hpdUrlInput" class="form-label">
-                                    <i class="fas fa-link me-2"></i>HPD Building URL
+                                <label for="hpdBuildingIdInput" class="form-label">
+                                    <i class="fas fa-id-badge me-2"></i>HPD Building ID
                                 </label>
-                                <input 
-                                    type="url" 
-                                    class="form-control" 
-                                    id="hpdUrlInput" 
-                                    placeholder="https://hpdonline.nyc.gov/hpdonline/building/314419/overview"
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    id="hpdBuildingIdInput"
+                                    placeholder="e.g., 314419"
                                 >
                                 <div class="form-text">
-                                    Enter the HPD building overview URL you want to scrape
+                                    Enter the HPD building ID (digits). This will scrape the HPD Online overview page for that building.
                                 </div>
                             </div>
                             
@@ -277,23 +277,23 @@
             e.preventDefault();
             
             console.log('🚀 Form submitted');
-            const hpdUrl = document.getElementById('hpdUrlInput').value;
+            const hpdBuildingId = document.getElementById('hpdBuildingIdInput').value;
             const biswebBorough = document.getElementById('biswebBorough').value;
             const biswebBlock = document.getElementById('biswebBlock').value;
             const biswebLot = document.getElementById('biswebLot').value;
             const dobnowUrl = document.getElementById('dobnowUrlInput').value;
-            const biswebPropertyUrl = document.getElementById('biswebPropertyUrlInput').value;
-            console.log('📝 HPD URL to scrape:', hpdUrl);
+            console.log('📝 HPD Building ID:', hpdBuildingId);
             console.log('📝 BISWEB Borough:', biswebBorough);
             console.log('📝 BISWEB Block:', biswebBlock);
             console.log('📝 BISWEB Lot:', biswebLot);
             console.log('📝 DOBNOW URL to scrape:', dobnowUrl);
-            console.log('📝 BISWEB Property URL to scrape:', biswebPropertyUrl);
             
             // Check if at least one URL or BISWEB Building (borough/block/lot) is provided
             const hasBisweb = biswebBorough && biswebBlock && biswebLot;
-            if (!hpdUrl && !hasBisweb && !dobnowUrl && !biswebPropertyUrl) {
-                alert('Please provide at least one URL or BISWEB Building (Borough, Block, Lot) to scrape.');
+            console.log('🔍 Has BISWEB Building input:', hasBisweb);
+            if (!hasBisweb && !dobnowUrl && !hpdBuildingId) {
+                console.log('⚠️ No input provided, showing alert');
+                alert('Please provide at least one input: HPD Building ID, BISWEB Building (Borough, Block, Lot), DOBNOW URL, or BISWEB Property URL to scrape.');
                 return;
             }
             
@@ -317,12 +317,11 @@
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({ 
-                        hpd_url: hpdUrl,
+                        hpd_building_id: hpdBuildingId,
                         bisweb_borough: biswebBorough,
                         bisweb_block: biswebBlock,
                         bisweb_lot: biswebLot,
                         dobnow_url: dobnowUrl,
-                        bisweb_property_url: biswebPropertyUrl
                     })
                 });
                 

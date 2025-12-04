@@ -98,3 +98,22 @@ class HPDScraper(BaseScraper):
         
         return data
 
+    def scrape_building_data(self, building_id_or_url):
+        """Accept either a HPD building id (digits) or a full URL.
+
+        If a building id is provided, construct the HPD overview URL
+        and navigate there. Otherwise, treat the input as a URL and
+        use the base class navigation.
+        """
+        # Normalize input
+        input_str = str(building_id_or_url).strip()
+
+        # If the input looks like a building id (all digits), construct the overview URL
+        if input_str.isdigit():
+            url = f"https://hpdonline.nyc.gov/hpdonline/building/{input_str}/overview"
+            print(f"🌐 HPD building id provided — navigating to: {url}")
+            return super().scrape_building_data(url)
+
+        # Otherwise assume it's a URL (or hostname) and let the base class handle it
+        return super().scrape_building_data(input_str)
+

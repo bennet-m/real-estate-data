@@ -23,33 +23,34 @@ def index():
 @app.route('/scrape', methods=['POST'])
 def scrape_data():
     """API endpoint to scrape building data"""
+    print("dih")
     try:
         data = request.get_json()
-        hpd_url = data.get('hpd_url')
         bisweb_borough = data.get('bisweb_borough')
         bisweb_block = data.get('bisweb_block')
         bisweb_lot = data.get('bisweb_lot')
+        hpd_building_id = data.get('hpd_building_id')
         bisweb_url = data.get('bisweb_url')  # Legacy support
         dobnow_url = data.get('dobnow_url')
         bisweb_property_url = data.get('bisweb_property_url')
-        
         has_bisweb = (bisweb_borough and bisweb_block and bisweb_lot) or bisweb_url
-        if not hpd_url and not has_bisweb and not dobnow_url and not bisweb_property_url:
-            return jsonify({'error': 'At least one URL or BISWEB Building (borough, block, lot) is required'}), 400
+        if not has_bisweb and not dobnow_url and not bisweb_property_url and not hpd_building_id:
+            return jsonify({'error': 'At least one input is required: HPD Building ID, BISWEB Building (borough, block, lot), DOBNOW URL, or BISWEB Property URL'}), 400
         
         all_data = {}
-        
-        # Scrape HPD data if URL provided
-        if hpd_url:
-            # Validate URL format
-            if not hpd_url.startswith('http://') and not hpd_url.startswith('https://'):
-                hpd_url = 'https://' + hpd_url
-            
-            print(f"🔍 Scraping HPD data from: {hpd_url}")
-            hpd_data = hpd_scraper.scrape_building_data(hpd_url)
-            # Prefix HPD data keys to distinguish them
-            for key, value in hpd_data.items():
-                all_data[f"HPD_{key}"] = value
+        # Scrape HPD data if building id provided
+        print("checking HPD...")
+        if hpd_building_id:
+            print(f"🔍 Scraping HPD data for building id: {hpd_building_id}")
+            hpd_input = str(hpd_building_id).strip()
+            if hpd_input:
+                try:
+                    print(f"🔍 Scraping HPD data for building id: {hpd_input}")
+                    hpd_data = hpd_scraper.scrape_building_data(hpd_input)
+                    for key, value in hpd_data.items():
+                        all_data[f"HPD_{key}"] = value
+                except Exception as e:
+                    print(f"  ⚠️ Error scraping HPD: {e}")
         
         # Scrape BISWEB data if borough/block/lot or URL provided
         if bisweb_borough and bisweb_block and bisweb_lot:
