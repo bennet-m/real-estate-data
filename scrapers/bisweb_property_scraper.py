@@ -1,5 +1,5 @@
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
 import time
 from .base_scraper import BaseScraper
@@ -8,6 +8,36 @@ from .base_scraper import BaseScraper
 class BISWEBPropertyScraper(BaseScraper):
     """Scraper for BISWEB Property Profile Overview page to extract landmark status, additional BINs, and violations"""
     
+    def scrape_building_data(self, borough=None, block=None, lot=None, url=None):
+        """Main entry: navigate by borough/block/lot form or by URL, then scrape."""
+        driver, _ = self._setup_driver()
+
+        try:
+            if borough and block and lot:
+                print("🌐 Navigating to BISWEB Property Info portal (by BBL)...")
+                driver.get(
+                    f"https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?"
+                    f"boro={borough}&block={block}&lot={lot}&go3=+GO+&requestid={0}"
+                )
+            elif url:
+                print(f"🌐 Navigating to URL: {url}")
+                driver.get(url)
+            else:
+                raise ValueError("Either (borough, block, lot) or url must be provided")
+
+            # Call the subclass scraping implementation
+            building_data = self._scrape_data(driver, WebDriverWait(driver, 10))
+
+            return building_data
+        except Exception as e:
+            import traceback
+            error_details = traceback.format_exc()
+            print(f"Full error traceback:\n{error_details}")
+            scraper_name = self.__class__.__name__
+            raise Exception(f"Error scraping {scraper_name} data: {str(e)}\nFull traceback: {error_details}")
+        finally:
+            driver.quit()
+
     def _scrape_data(self, driver, wait):
         """Scrape building data from BISWEB Property Profile Overview page"""
         print("🏢 Scraping BISWEB Property Profile Overview data...")
@@ -68,7 +98,7 @@ class BISWEBPropertyScraper(BaseScraper):
                     print(f"  📊 Additional BINs: {bins_text}")
                 else:
                     building_data["Additional BINs"] = "NONE"
-                    print(f"  📊 Additional BINs: NONE")
+                    print("  📊 Additional BINs: NONE")
         except Exception as e:
             print(f"  ⚠️ Error extracting Additional BINs: {str(e)}")
         
