@@ -53,16 +53,15 @@ def scrape_data():
         
         # Scrape BISWEB data if borough/block/lot or URL provided
         if bisweb_borough and bisweb_block and bisweb_lot:
-            # print(f"🔍 Scraping BISWEB data with Borough={bisweb_borough}, Block={bisweb_block}, Lot={bisweb_lot}")
-            # bisweb_data = bisweb_scraper.scrape_building_data(
-            #     borough=bisweb_borough,
-            #     block=bisweb_block,
-            #     lot=bisweb_lot
-            # )
-            # # Prefix BISWEB data keys to distinguish them
-            # for key, value in bisweb_data.items():
-            #     all_data[f"BISWEB_{key}"] = value
-            # # Also scrape BISWEB Property Profile (BISWEB Property) using the same BBL
+            print(f"🔍 Scraping BISWEB data with Borough={bisweb_borough}, Block={bisweb_block}, Lot={bisweb_lot}")
+            bisweb_data = bisweb_scraper.scrape_building_data(
+                borough=bisweb_borough,
+                block=bisweb_block,
+                lot=bisweb_lot
+            )
+            # Prefix BISWEB data keys to distinguish them
+            for key, value in bisweb_data.items():
+                all_data[f"BISWEB_{key}"] = value
             try:
                 print(f"🔍 Scraping BISWEB Property Profile with Borough={bisweb_borough}, Block={bisweb_block}, Lot={bisweb_lot}")
                 bisweb_property_data = bisweb_property_scraper.scrape_building_data(
