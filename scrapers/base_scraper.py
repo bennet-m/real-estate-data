@@ -30,10 +30,24 @@ class BaseScraper(ABC):
         chrome_options.add_argument("--start-maximized")  # Start maximized
         chrome_options.add_argument("--disable-web-security")  # Disable web security for better compatibility
         chrome_options.add_argument("--disable-features=VizDisplayCompositor")  # Disable compositor for stability
+        chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+        chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        chrome_options.add_experimental_option("useAutomationExtension", False)
+
         
         driver = webdriver.Chrome(options=chrome_options)
         wait = WebDriverWait(driver, 10)
-        
+        driver.execute_cdp_cmd(
+            "Page.addScriptToEvaluateOnNewDocument",
+            {
+                "source": """
+                Object.defineProperty(navigator, 'webdriver', {
+                    get: () => undefined
+                })
+                """
+            }
+        )
+
         # Ensure window is properly sized for content loading
         driver.set_window_size(1920, 1080)
         driver.maximize_window()

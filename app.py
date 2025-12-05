@@ -48,9 +48,15 @@ def scrape_data():
                     print(f"🔍 Scraping HPD data for building id: {hpd_input}")
                     hpd_data = hpd_scraper.scrape_building_data(hpd_input)
                     for key, value in hpd_data.items():
-                        all_data[f"HPD_{key}"] = value
+                        all_data[key] = value
                 except Exception as e:
                     print(f"  ⚠️ Error scraping HPD: {e}")
+            print("scraping dobnow")
+            dobnow_data = dobnow_scraper.scrape_building_data(all_data['BIN'])
+            # Prefix DOBNOW data keys to distinguish them
+            for key, value in dobnow_data.items():
+                all_data[key] = value
+
         
         # Scrape BISWEB data if borough/block/lot or URL provided
         if bisweb_borough and bisweb_block and bisweb_lot:
@@ -62,7 +68,7 @@ def scrape_data():
             )
             # Prefix BISWEB data keys to distinguish them
             for key, value in bisweb_data.items():
-                all_data[f"BISWEB_{key}"] = value
+                all_data[key] = value
             try:
                 print(f"🔍 Scraping BISWEB Property Profile with Borough={bisweb_borough}, Block={bisweb_block}, Lot={bisweb_lot}")
                 bisweb_property_data = bisweb_property_scraper.scrape_building_data(
@@ -71,45 +77,9 @@ def scrape_data():
                     lot=bisweb_lot
                 )
                 for key, value in bisweb_property_data.items():
-                    all_data[f"BISWEB_PROPERTY_{key}"] = value
+                    all_data[key] = value
             except Exception as e:
                 print(f"  ⚠️ Error scraping BISWEB Property Profile: {e}")
-        elif bisweb_url:
-            # Legacy support: if URL is provided, use it directly
-            # Validate URL format
-            if not bisweb_url.startswith('http://') and not bisweb_url.startswith('https://'):
-                bisweb_url = 'https://' + bisweb_url
-            
-            print(f"🔍 Scraping BISWEB data from: {bisweb_url}")
-            bisweb_data = bisweb_scraper.scrape_building_data(url=bisweb_url)
-            # Prefix BISWEB data keys to distinguish them
-            for key, value in bisweb_data.items():
-                all_data[f"BISWEB_{key}"] = value
-        
-        # Scrape DOBNOW data if URL provided
-        if dobnow_url:
-            # Validate URL format
-            if not dobnow_url.startswith('http://') and not dobnow_url.startswith('https://'):
-                dobnow_url = 'https://' + dobnow_url
-            
-            print(f"🔍 Scraping DOBNOW data from: {dobnow_url}")
-            dobnow_data = dobnow_scraper.scrape_building_data(dobnow_url)
-            # Prefix DOBNOW data keys to distinguish them
-            for key, value in dobnow_data.items():
-                all_data[f"DOBNOW_{key}"] = value
-        
-        # Scrape BISWEB Property Profile data if URL provided
-        if bisweb_property_url:
-            # Validate URL format
-            if not bisweb_property_url.startswith('http://') and not bisweb_property_url.startswith('https://'):
-                bisweb_property_url = 'https://' + bisweb_property_url
-            
-            print(f"🔍 Scraping BISWEB Property Profile data from: {bisweb_property_url}")
-            bisweb_property_data = bisweb_property_scraper.scrape_building_data(url=bisweb_property_url)
-            # Prefix BISWEB Property data keys to distinguish them
-            for key, value in bisweb_property_data.items():
-                all_data[f"BISWEB_PROPERTY_{key}"] = value
-        
         # Generate unique filename
         filename = f"building_data_{uuid.uuid4().hex[:8]}.csv"
         filepath = os.path.join('downloads', filename)

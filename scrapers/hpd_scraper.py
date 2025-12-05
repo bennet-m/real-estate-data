@@ -34,12 +34,16 @@ class HPDScraper(BaseScraper):
             By.XPATH, "//div[contains(@class,'card-content')][.//div[text()='STOREYS']]//div[contains(@class,'card-content-botttom')]"
         )
         stories = self.get_element_text(stories_element)
-
+        
         a_units_element = driver.find_element(
             By.XPATH, "//div[contains(@class,'card-content')][.//div[text()='A UNITS']]//div[contains(@class,'card-content-botttom')]"
         )
         a_units = self.get_element_text(a_units_element)
-
+        bin_element = driver.find_element(
+            By.XPATH, "//div[contains(@class,'card-content')][.//div[text()='BIN']]//div[contains(@class,'card-content-botttom')]"
+        )
+        bin = self.get_element_text(bin_element)
+    
         b_units_element = driver.find_element(
             By.XPATH, "//div[contains(@class,'card-content')][.//div[text()='B UNITS']]//div[contains(@class,'card-content-botttom')]"
         )
@@ -66,6 +70,7 @@ class HPDScraper(BaseScraper):
             "stories": stories,
             "a_units": a_units,
             "b_units": b_units,
+            "bin": bin,
             "litigation": litigation_number,
             "aep_status": aep_status,
             "conh_status": conh_status
@@ -75,7 +80,8 @@ class HPDScraper(BaseScraper):
         """Scrape building data from HPD page"""
         wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "div.p-card-content")))
         time.sleep(2)
-        
+        wait.until(lambda d: d.execute_script("return document.readyState") == "complete")
+
         # Scrape violations
         violations = self._scrape_violations(driver)
         
@@ -87,6 +93,7 @@ class HPDScraper(BaseScraper):
             "Stories": building_details["stories"],
             "A Units": building_details["a_units"],
             "B Units": building_details["b_units"],
+            "BIN": building_details["bin"],
             "Litigation": building_details["litigation"],
             "AEP Status": building_details["aep_status"],
             "CONH Status": building_details["conh_status"],

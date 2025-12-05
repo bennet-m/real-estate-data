@@ -100,3 +100,84 @@ class DOBNOWScraper(BaseScraper):
         
         return building_data
 
+    def scrape_building_data(self, building_id):
+        """Scrape building data using a BIN (Building Identification Number).
+        
+        Navigates to the DOBNOW search page, clicks the BIN search button,
+        enters the building ID, and performs the search.
+        
+        Args:
+            building_id: The BIN to search for (7-digit number)
+        """
+        try:    
+            # Normalize input
+            input_str = str(building_id).strip()
+            
+            # Start with the search page
+            search_url = "https://a810-dobnow.nyc.gov/publish/Index.html#!/search"
+            print(f"🌐 Navigating to DOBNOW search page: {search_url}")
+            
+            # Use the base class setup to create driver and navigate
+            driver, wait = self._setup_driver()
+            
+            # Navigate to the search page
+            driver.get(search_url)
+            wait.until(lambda d: d.execute_script("return document.readyState") == "complete")
+            # Click the BIN search button
+            print("🔘 Clicking BIN search button...")
+            bin_button_xpath = "//button[@role='img' and @aria-label='Search by BIN']"
+            bin_button = wait.until(EC.element_to_be_clickable((By.XPATH, bin_button_xpath)))
+            bin_button.click()
+            print("waiting")
+            wait.until(lambda d: d.execute_script("return document.readyState") == "complete")
+            print("ready")
+            time.sleep(4)
+            
+            # Enter the building ID in the input field
+            print(f"⌨️  Entering BIN: {input_str}")
+            bin_input = wait.until(EC.presence_of_element_located((By.ID, "enterbin")))
+            # bin_input = wait.until(
+            #     EC.element_to_be_clickable((By.ID, "enterbin"))
+            # )
+            # print('waited')
+            bin_input = driver.find_element(By.ID, "enterbin")
+
+            bin_input = driver.find_element(By.ID, "enterbin")
+
+            # Use JavaScript to set the value AND trigger Angular input event
+            driver.execute_script("""
+            var input = arguments[0];
+            var value = arguments[1];
+            input.focus();
+            input.value = value;
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+            """, bin_input, input_str)
+
+            # time.sleep(300)
+            # driver.execute_script("arguments[0].focus();", bin_input)
+            # print('focuised')
+            # bin_input.click()
+            # print('clicked')
+            # bin_input.send_keys(input_str)
+            
+            # Click the search button
+            print("🔍 Clicking search button...")
+            time.sleep(2)
+            search_btn = driver.find_element(By.ID, "search2")
+            driver.execute_script("arguments[0].click();", search_btn)
+            
+            # Wait for results to load
+            print("⏳ Waiting for search results...")
+            time.sleep(3) 
+            
+            # Scrape the data from the results page
+            data = self._scrape_data(driver, wait)
+            
+            return data
+        except Exception as e:
+            import traceback
+            error_details = traceback.format_exc()
+            print(f"Full error traceback:\n{error_details}")
+            raise Exception(f"Error scraping {e} data: {str(e)}\nFull traceback: {error_details}")
+
